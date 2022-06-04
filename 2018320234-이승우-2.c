@@ -51,8 +51,9 @@ void enqueue(Queue* pq, int pagenum, int rbit) {
 }
 
 //Reference Bit가 0인 페이지를 찾아가는 과정.
-//지나가는 Reference Bit 1들은 모두 0으로 바꿔주고, 처음으로 만난 Reference Bit 0을 가진 페이지의 번호를 리턴한다.
-int moveNext(Queue* pq) {
+//지나가는 Reference Bit 1들은 모두 0으로 바꿔주고,
+//처음 Reference Bit가 0인 페이지가 Victim이 되며, 해당 페이지를 새로운 페이지로 replace하고, Bit도 1로 바꿔준다.
+int moveNext(Queue* pq, int newpage) {
     int ret;
 
     //printf("현재 cur PAGE는 %d이다\n", pq->cur->pagenum);
@@ -63,8 +64,11 @@ int moveNext(Queue* pq) {
     }
 
     //printf("victim은 %d 으로 정해졌다.\n", pq->cur->pagenum);
+
     ret = pq->cur->pagenum;
-    pq->cur = pq->cur->next;    //다음번을 위해 미리 한 칸 전진해놓음
+
+    pq->cur->pagenum = newpage;
+    pq->cur->rbit = 1;
 
     return ret;
 }
@@ -79,31 +83,6 @@ void updateBit(Queue* pq, int targetPage) {
 
     temp->rbit = 1;
     //printf("Page %d의 Reference Bit를 1로 바꿔줌.\n", targetPage);
-}
-
-int doesExist(Queue* pq, int targetPage) {
-    Node* temp;
-    temp = pq->front;
-
-    int exists = 0;
-
-    while(1) {
-        if(temp == pq->rear) {
-            exists = 0;
-            break;
-        }
-        else {
-            if(temp->pagenum == targetPage){
-                exists = 1;
-                break;
-            }
-            else {
-                temp = temp->next;
-            }
-        }
-    }
-
-    return exists;
 }
 
 /*--------------------------------------------------------------------------------*/
@@ -128,8 +107,8 @@ int main(int argc, char** argv) {
     int* ref = generate_ref_arr(ref_arr_sz, page_max);
     int testRef[] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2, 1, 2, 0, 1, 7, 0, 1};
 
-    //int page_faults = lru(testRef, ref_arr_sz, frame_sz, page_max);
-    int page_faults = lru(ref, ref_arr_sz, frame_sz, page_max);
+    int page_faults = lru(testRef, ref_arr_sz, frame_sz, page_max);
+    //int page_faults = lru(ref, ref_arr_sz, frame_sz, page_max);
     printf("%d\n", page_faults);
     free(ref);
 
@@ -190,29 +169,13 @@ int lru(int* ref_arr, size_t ref_arr_sz, size_t frame_sz, size_t page_max) {
                 }
 
                 //만약 frames 배열이 이미 꽉차있는 상태라면,
-                //큐에서 가장 처음 0이 되는 노드의 페이지번호를 찾아서, frames에서의 인덱스를 찾고, 해당 위치에 요청 페이지를 넣는다.
-                //큐에서 가장 처음 0이 되는 노드를 찾아가는 과정에서 중간에 만나는 Reference Bit 1들은 모두 0으로 바꿔주어야 한다.
+                //큐에서 가장 처음 0이 되는 노드의 페이지번호를 찾아서, 요청된 새로운 페이지로 replace한다.
+                //frames에서도 해당 페이지로 replace해주어야 한다.
                 else{
                     //printf("현재 cur이 가리키는 페이지 = %d\n", myqueue.cur->pagenum);
-                    victim = moveNext(&myqueue);
-
-                    //그런데, victim page가 frames 내부에 없을 수도 있음.
-                    //그러면 한 바퀴를 더 돌아서 올바른 victim을 찾아줘야 함.
-                    while(_contains(frames, frame_sz, victim) == -1) {
-                        victim = moveNext(&myqueue);
-                    }
-
+                    victim = moveNext(&myqueue, ref_arr[i]);
                     target = _contains(frames, frame_sz, victim);
                     frames[target] = ref_arr[i];
-
-                    //만약 요청 페이지가 큐에 없었다면 enqueue해주고,
-                    //큐에 있었다면 해당 페이지의 비트를 1로 바꿔준다.
-                    if(doesExist(&myqueue, ref_arr[i])){
-                        updateBit(&myqueue, ref_arr[i]);
-                    }
-                    else{
-                        enqueue(&myqueue, ref_arr[i], 1);
-                    }
                 }
             }
 

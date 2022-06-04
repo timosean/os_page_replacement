@@ -128,8 +128,8 @@ int main(int argc, char** argv) {
     int* ref = generate_ref_arr(ref_arr_sz, page_max);
     int testRef[] = {7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2, 1, 2, 0, 1, 7, 0, 1};
 
-    int page_faults = lru(testRef, ref_arr_sz, frame_sz, page_max);
-    //int page_faults = lru(ref, ref_arr_sz, frame_sz, page_max);
+    //int page_faults = lru(testRef, ref_arr_sz, frame_sz, page_max);
+    int page_faults = lru(ref, ref_arr_sz, frame_sz, page_max);
     printf("%d\n", page_faults);
     free(ref);
 

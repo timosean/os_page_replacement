@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 int* generate_ref_arr(size_t sz, size_t page_max);
 int lru(int* ref_arr, size_t ref_arr_sz, size_t frame_sz);
@@ -23,17 +24,18 @@ int main(int argc, char** argv) {
 
 int* generate_ref_arr(size_t sz, size_t page_max) {
     int* ref_arr = (int*) malloc(sizeof(int) * sz);
+
+    srand((unsigned int)time(NULL));
     
     // TODO :: Generate Random Refernece String
     for(int i=0; i < sz; i++) {
         //0부터 page_max 사이의 숫자를 랜덤으로 뽑아서 Reference String에 넣는다.
         ref_arr[i] = rand() % (page_max + 1);
     }
-
     return ref_arr;
 }
 
-//Stack을 이용한 LRU Simulation
+//Clock Algorithm을 이용한 LRU Approximation
 int lru(int* ref_arr, size_t ref_arr_sz, size_t frame_sz) {
     int i, j;
     int page_faults = 0;
